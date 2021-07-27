@@ -9,6 +9,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SMS_Listener">
+
+
         <receiver
             android:name=".SmsReceiver"
             android:enabled="true"
@@ -18,12 +20,14 @@
             </intent-filter>
         </receiver>
 
+
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
     <uses-permission android:name="android.permission.SEND_SMS" />

@@ -26,6 +26,7 @@ public class SmsReceiver extends BroadcastReceiver {
         String format = bundle.getString("format");
 
         // Retrieve the SMS message received.
+        try {
         Object[] pdus = (Object[]) bundle.get(pdu_type);
 
         if (pdus != null) {
@@ -50,15 +51,18 @@ public class SmsReceiver extends BroadcastReceiver {
                 strMessage += " :" + msgs[i].getMessageBody() + "\n";
 
                 // Log and display the SMS message.
-                Log.d(TAG, "PRIVETTT: " + strMessage);
+                Log.d(TAG, "PRIVETTT_8: " + strMessage);
                 Log.d(TAG, "PRIVETTT");
-//                Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
-//                Toast.makeText(context.getApplicationContext(), strMessage, Toast.LENGTH_LONG).show();
-                Toast.makeText(context.getApplicationContext(), strMessage, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
             }
         }
 
-        throw new UnsupportedOperationException("Not yet implemented");
+        } catch(Exception e) {
+                            Log.d("Exception caught",e.getMessage());
+        }
+
+
+//        throw new UnsupportedOperationException("Not yet implemented");
     }
 }
