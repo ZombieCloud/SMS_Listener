@@ -20,9 +20,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void sendMessage(View view) {
         TextView textView = findViewById(R.id.textView);
-        textView.setText("Privettt");
 
-        Log.d(TAG, "PRIVETTT");
+        GetLocation gl = new GetLocation();
+        textView.setText(gl.sayPrivet());
+
     }
 
 
