@@ -63,6 +63,6 @@ public class SmsReceiver extends BroadcastReceiver {
         }
 
 
-//        throw new UnsupportedOperationException("Not yet implemented");
+//        throw new UnsupportedOperationException("Not yet implemented");   // privet
     }
 }
