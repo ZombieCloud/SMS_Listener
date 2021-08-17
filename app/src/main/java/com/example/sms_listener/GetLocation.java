@@ -1,10 +1,13 @@
 package com.example.sms_listener;
 
+import android.app.Activity;
 import android.content.IntentSender;
+import android.location.Location;
 import android.os.Looper;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -17,12 +20,11 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 
-import androidx.annotation.NonNull;
+import java.text.DateFormat;
+import java.util.Date;
 
 public class GetLocation {
 
@@ -30,6 +32,18 @@ public class GetLocation {
 
     //Constant used in the location settings dialog.
     private static final int REQUEST_CHECK_SETTINGS = 0x1;
+
+    /**
+     * The desired interval for location updates. Inexact. Updates may be more or less frequent.
+     */
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
+
+    /**
+     * The fastest rate for active location updates. Exact. Updates will never be more frequent
+     * than this value.
+     */
+    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
+            UPDATE_INTERVAL_IN_MILLISECONDS / 2;
 
     //Provides access to the Location Settings API.
     private SettingsClient mSettingsClient;
@@ -44,26 +58,49 @@ public class GetLocation {
     //Stores parameters for requests to the FusedLocationProviderApi.
     private LocationRequest mLocationRequest;
 
+    /**
+     * Represents a geographical location.
+     */
+    private Location mCurrentLocation;
+
+    /**
+     * Time when the location was updated represented as a String.
+     */
+    private String mLastUpdateTime;
+
     //Callback for Location events.
     private LocationCallback mLocationCallback;
 
+    public Activity mainActivity;
+    public GetLocation(Activity mainActivity1) {
+        mainActivity = mainActivity1;
 
-    public GetLocation() {    
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mainActivity);
+        mSettingsClient = LocationServices.getSettingsClient(mainActivity);
+
+        mLastUpdateTime = "";
+
+        // Kick off the process of building the LocationCallback, LocationRequest, and
+        // LocationSettingsRequest objects.
+        createLocationCallback();
+        createLocationRequest();
+        buildLocationSettingsRequest();
     }
 
     public String sayPrivet() {
         return "PRIVET_2";
     }
 
-    public void startUpdatesButtonHandler(View view) {
-            startLocationUpdates();
-        }
+    public void startUpdatesButtonHandler() {
+        startLocationUpdates();
     }
+
 
     private void startLocationUpdates() {
         // Begin by checking if the device has the necessary location settings.
+        mSettingsClient = LocationServices.getSettingsClient(mainActivity);
         mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
-                .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+                .addOnSuccessListener(new OnSuccessListener<LocationSettingsResponse>() {
                     @Override
                     public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
                         Log.i(TAG, "All location settings are satisfied.");
@@ -75,10 +112,11 @@ public class GetLocation {
                         updateUI();
                     }
                 })
-                .addOnFailureListener(this, new OnFailureListener() {
+                .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         int statusCode = ((ApiException) e).getStatusCode();
+//                        int statusCode = LocationSettingsStatusCodes.RESOLUTION_REQUIRED;
                         switch (statusCode) {
                             case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                                 Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade location settings ");
@@ -86,7 +124,7 @@ public class GetLocation {
                                     // Show the dialog by calling startResolutionForResult(), and check the
                                     // result in onActivityResult().
                                     ResolvableApiException rae = (ResolvableApiException) e;
-                                    rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
+                                    rae.startResolutionForResult(mainActivity, REQUEST_CHECK_SETTINGS);
                                 } catch (IntentSender.SendIntentException sie) {
                                     Log.i(TAG, "PendingIntent unable to execute request.");
                                 }
@@ -94,12 +132,79 @@ public class GetLocation {
                             case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                                 String errorMessage = "Location settings are inadequate, and cannot be fixed here. Fix in Settings.";
                                 Log.e(TAG, errorMessage);
-                                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                                Toast.makeText(mainActivity, errorMessage, Toast.LENGTH_LONG).show();
 
                         }
 
                         updateUI();
                     }
-                });
+                }
+                );
     }
+
+
+    private void updateUI() {
+        updateLocationUI();
+    }
+
+
+    private void updateLocationUI() {
+
+        if (mCurrentLocation != null) {
+
+            Log.i(TAG, "Latitude OK");
+            Log.i(TAG, "Longitude OK");
+
+//            mLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,
+//                    mCurrentLocation.getLatitude()));
+//            mLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLongitudeLabel,
+//                    mCurrentLocation.getLongitude()));
+//            mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+//                    mLastUpdateTimeLabel, mLastUpdateTime));
+        } else {
+            Log.i(TAG, "NO Longitude");
+        }
+
+    }
+
+
+    private void createLocationCallback() {
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+                mCurrentLocation = locationResult.getLastLocation();
+                mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+                updateLocationUI();
+            }
+        };
+    }
+
+
+    private void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+
+        // Sets the desired interval for active location updates. This interval is
+        // inexact. You may not receive updates at all if no location sources are available, or
+        // you may receive them slower than requested. You may also receive updates faster than
+        // requested if other applications are requesting location at a faster interval.
+        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+
+        // Sets the fastest rate for active location updates. This interval is exact, and your
+        // application will never receive updates faster than this value.
+        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+
+
+    private void buildLocationSettingsRequest() {
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(mLocationRequest);
+        mLocationSettingsRequest = builder.build();
+    }
+
+
 }
