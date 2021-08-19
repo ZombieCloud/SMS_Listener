@@ -20,8 +20,10 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -63,13 +65,23 @@ public class GetLocation {
      */
     private Location mCurrentLocation;
 
-    /**
-     * Time when the location was updated represented as a String.
-     */
-    private String mLastUpdateTime;
 
     //Callback for Location events.
     private LocationCallback mLocationCallback;
+
+    /**
+     * Tracks the status of the location updates request. Value changes when the user presses the
+     * Start Updates and Stop Updates buttons.
+     */
+    private Boolean mRequestingLocationUpdates;
+
+
+    public String Latitude = "";
+    public String Longitude = "";
+    public String mLastUpdateTime = "";
+
+
+
 
     public Activity mainActivity;
     public GetLocation(Activity mainActivity1) {
@@ -78,21 +90,28 @@ public class GetLocation {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mainActivity);
         mSettingsClient = LocationServices.getSettingsClient(mainActivity);
 
-        mLastUpdateTime = "";
+//        mLastUpdateTime = "";
+        mRequestingLocationUpdates = false;
 
         // Kick off the process of building the LocationCallback, LocationRequest, and
         // LocationSettingsRequest objects.
         createLocationCallback();
         createLocationRequest();
         buildLocationSettingsRequest();
+
+        // START
+        startUpdatesButtonHandler();
     }
 
     public String sayPrivet() {
-        return "PRIVET_2";
+        return "PRIVET";
     }
 
     public void startUpdatesButtonHandler() {
-        startLocationUpdates();
+        if (!mRequestingLocationUpdates) {
+            mRequestingLocationUpdates = true;
+            startLocationUpdates();
+        }
     }
 
 
@@ -133,7 +152,7 @@ public class GetLocation {
                                 String errorMessage = "Location settings are inadequate, and cannot be fixed here. Fix in Settings.";
                                 Log.e(TAG, errorMessage);
                                 Toast.makeText(mainActivity, errorMessage, Toast.LENGTH_LONG).show();
-
+                                mRequestingLocationUpdates = false;
                         }
 
                         updateUI();
@@ -155,17 +174,28 @@ public class GetLocation {
             Log.i(TAG, "Latitude OK");
             Log.i(TAG, "Longitude OK");
 
-//            mLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,
-//                    mCurrentLocation.getLatitude()));
-//            mLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLongitudeLabel,
-//                    mCurrentLocation.getLongitude()));
-//            mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
-//                    mLastUpdateTimeLabel, mLastUpdateTime));
+            Latitude = String.format("%f", mCurrentLocation.getLatitude());
+            Longitude = String.format("%f", mCurrentLocation.getLongitude());
+
+            // Только один раз получаем данные. Без этого - постоянное обновление
+            stopLocationUpdates();
+
+            Toast.makeText(mainActivity, "Latitude = " + Latitude + "    " + "Longitude = " + Longitude, Toast.LENGTH_LONG).show();
+
         } else {
             Log.i(TAG, "NO Longitude");
         }
 
     }
+
+
+//    public String get_Latitude() {
+//        return Latitude;
+//    }
+//    public String get_Longitude() {
+//        return Longitude;
+//    }
+
 
 
     private void createLocationCallback() {
@@ -204,6 +234,26 @@ public class GetLocation {
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
         builder.addLocationRequest(mLocationRequest);
         mLocationSettingsRequest = builder.build();
+    }
+
+
+
+    private void stopLocationUpdates() {
+        if (!mRequestingLocationUpdates) {
+            Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
+            return;
+        }
+
+        // It is a good practice to remove location requests when the activity is in a paused or
+        // stopped state. Doing so helps battery performance and is especially
+        // recommended in applications that request frequent location updates.
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback)
+                .addOnCompleteListener(mainActivity, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        mRequestingLocationUpdates = false;
+                    }
+                });
     }
 
 
