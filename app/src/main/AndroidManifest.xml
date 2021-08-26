@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SMS_Listener">
 
-
+        <!-- это значит, что приемник работает даже если приложение не запущено -->
         <receiver
             android:name=".SmsReceiver"
             android:enabled="true"

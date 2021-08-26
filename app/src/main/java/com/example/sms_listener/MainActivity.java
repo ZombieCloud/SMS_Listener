@@ -18,26 +18,19 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        gl = new GetLocation(this);
+        if (getIntent().hasExtra("STR_TEL_NUMBER")) {
+            Bundle extras = getIntent().getExtras();
+            gl = new GetLocation(this, extras.getString("STR_TEL_NUMBER"));
+        }
+
     }
+
 
     public void sendMessage(View view) {
         TextView textView = findViewById(R.id.textView);
-
-        gl = new GetLocation(this);
-//        while (gl.Longitude == "" && gl.Latitude == "") {}
-
+        gl = new GetLocation(this, null);
         textView.setText(gl.sayPrivet());
-//        Toast.makeText(this, "Latitude = " + gl.get_Latitude() + "    " + "Longitude = " + gl.get_Longitude(), Toast.LENGTH_LONG).show();
-//        Toast.makeText(this, "Latitude = " + gl.Latitude + "    " + "Longitude = " + gl.Longitude, Toast.LENGTH_LONG).show();
-
     }
 
-
-//    @Override
-//    public void onFailure(@NonNull Exception e) {    }
-
-//    @Override
-//    public void onSuccess(Object o) {    }
 
 }

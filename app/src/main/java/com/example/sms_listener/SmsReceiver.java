@@ -8,7 +8,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.telephony.SmsMessage;
 import android.util.Log;
-import android.widget.Toast;
 
 public class SmsReceiver extends BroadcastReceiver {
 
@@ -27,35 +26,40 @@ public class SmsReceiver extends BroadcastReceiver {
 
         // Retrieve the SMS message received.
         try {
-        Object[] pdus = (Object[]) bundle.get(pdu_type);
+            Object[] pdus = (Object[]) bundle.get(pdu_type);
 
-        if (pdus != null) {
-            // Check the Android version.
-            boolean isVersionM = (Build.VERSION.SDK_INT >=
-                    Build.VERSION_CODES.M);
+            if (pdus != null) {
+                // Check the Android version.
+                boolean isVersionM = (Build.VERSION.SDK_INT >=
+                        Build.VERSION_CODES.M);
 
-            // Fill the msgs array.
-            msgs = new SmsMessage[pdus.length];
-            for (int i = 0; i < msgs.length; i++) {
-                // Check Android version and use appropriate createFromPdu.
-                if (isVersionM) {
-                    // If Android version M or newer:
-                    msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
-                } else {
-                    // If Android version L or older:
-                    msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
+                // Fill the msgs array.
+                msgs = new SmsMessage[pdus.length];
+                for (int i = 0; i < msgs.length; i++) {
+                    // Check Android version and use appropriate createFromPdu.
+                    if (isVersionM) {
+                        // If Android version M or newer:
+                        msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
+                    } else {
+                        // If Android version L or older:
+                        msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
+                    }
+
+                    // Build the message to show.
+//                    strMessage += "SMS from " + msgs[i].getOriginatingAddress();
+//                    strMessage += " :" + msgs[i].getMessageBody() + "\n";
+
+                    // Log and display the SMS message.
+//                    Log.d(TAG, "PRIVETTT_8: " + strMessage);
+//                    Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
+
+                    // Стартуем MainActivity, при старте определяем координаты и ответная смс
+                    Intent mIntent = new Intent(context, MainActivity.class);
+                    mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_TASK_ON_HOME | Intent.FLAG_ACTIVITY_CLEAR_TASK);   // FLAG_ACTIVITY_CLEAR_TASK - для того, чтоб MainActivity рестартовалась при каждой смс
+                    mIntent.putExtra("STR_TEL_NUMBER", msgs[i].getOriginatingAddress());
+                    mIntent.putExtra("STR_MESSAGE", msgs[i].getMessageBody());
+                    context.startActivity(mIntent);
                 }
-
-                // Build the message to show.
-                strMessage += "SMS from " + msgs[i].getOriginatingAddress();
-                strMessage += " :" + msgs[i].getMessageBody() + "\n";
-
-                // Log and display the SMS message.
-                Log.d(TAG, "PRIVETTT_8: " + strMessage);
-                Log.d(TAG, "PRIVETTT");
-                Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
-
-            }
         }
 
         } catch(Exception e) {

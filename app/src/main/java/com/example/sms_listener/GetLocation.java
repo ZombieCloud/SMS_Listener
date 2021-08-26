@@ -1,9 +1,12 @@
 package com.example.sms_listener;
 
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.location.Location;
 import android.os.Looper;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -47,6 +50,11 @@ public class GetLocation {
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
 
+
+    private static final String SMS_SENT_ACTION = "SMS_SENT_ACTION";
+    private static final String SMS_DELIVERED_ACTION = "SMS_DELIVERED_ACTION";
+
+
     //Provides access to the Location Settings API.
     private SettingsClient mSettingsClient;
 
@@ -82,10 +90,11 @@ public class GetLocation {
 
 
 
-
     public Activity mainActivity;
-    public GetLocation(Activity mainActivity1) {
+    public String telNumber;
+    public GetLocation(Activity mainActivity1, String telNumber1) {
         mainActivity = mainActivity1;
+        telNumber = telNumber1;
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mainActivity);
         mSettingsClient = LocationServices.getSettingsClient(mainActivity);
@@ -107,6 +116,7 @@ public class GetLocation {
         return "PRIVET";
     }
 
+
     public void startUpdatesButtonHandler() {
         if (!mRequestingLocationUpdates) {
             mRequestingLocationUpdates = true;
@@ -118,6 +128,7 @@ public class GetLocation {
     private void startLocationUpdates() {
         // Begin by checking if the device has the necessary location settings.
         mSettingsClient = LocationServices.getSettingsClient(mainActivity);
+
         mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
                 .addOnSuccessListener(new OnSuccessListener<LocationSettingsResponse>() {
                     @Override
@@ -135,7 +146,6 @@ public class GetLocation {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         int statusCode = ((ApiException) e).getStatusCode();
-//                        int statusCode = LocationSettingsStatusCodes.RESOLUTION_REQUIRED;
                         switch (statusCode) {
                             case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                                 Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade location settings ");
@@ -171,30 +181,27 @@ public class GetLocation {
 
         if (mCurrentLocation != null) {
 
-            Log.i(TAG, "Latitude OK");
-            Log.i(TAG, "Longitude OK");
-
             Latitude = String.format("%f", mCurrentLocation.getLatitude());
             Longitude = String.format("%f", mCurrentLocation.getLongitude());
 
             // Только один раз получаем данные. Без этого - постоянное обновление
             stopLocationUpdates();
 
-            Toast.makeText(mainActivity, "Latitude = " + Latitude + "    " + "Longitude = " + Longitude, Toast.LENGTH_LONG).show();
+            Toast.makeText(mainActivity, "Latitude = " + Latitude + "     " + "Longitude = " + Longitude + "    " + "Tel = " + telNumber, Toast.LENGTH_LONG).show();
+
+            //  Отсылаем смс
+            if (telNumber != null) {
+                SmsManager sms = SmsManager.getDefault();
+                sms.sendTextMessage(telNumber, null, "ку-ку", PendingIntent.getBroadcast(
+                        this.mainActivity, 0, new Intent(SMS_SENT_ACTION), 0), PendingIntent.getBroadcast(this.mainActivity, 0, new Intent(SMS_DELIVERED_ACTION), 0));
+            }
 
         } else {
-            Log.i(TAG, "NO Longitude");
+//            Log.i(TAG, "No location");
+//            Toast.makeText(mainActivity, "No location", Toast.LENGTH_LONG).show();
         }
-
     }
 
-
-//    public String get_Latitude() {
-//        return Latitude;
-//    }
-//    public String get_Longitude() {
-//        return Longitude;
-//    }
 
 
 
