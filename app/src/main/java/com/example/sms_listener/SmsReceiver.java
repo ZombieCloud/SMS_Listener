@@ -54,11 +54,14 @@ public class SmsReceiver extends BroadcastReceiver {
 //                    Toast.makeText(context, strMessage, Toast.LENGTH_LONG).show();
 
                     // Стартуем MainActivity, при старте определяем координаты и ответная смс
-                    Intent mIntent = new Intent(context, MainActivity.class);
-                    mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_TASK_ON_HOME | Intent.FLAG_ACTIVITY_CLEAR_TASK);   // FLAG_ACTIVITY_CLEAR_TASK - для того, чтоб MainActivity рестартовалась при каждой смс
-                    mIntent.putExtra("STR_TEL_NUMBER", msgs[i].getOriginatingAddress());
-                    mIntent.putExtra("STR_MESSAGE", msgs[i].getMessageBody());
-                    context.startActivity(mIntent);
+                    String keyString = "WhereAreYouuu";
+                    if (msgs[i].getMessageBody().toLowerCase().contains(keyString.toLowerCase())) {
+                        Intent mIntent = new Intent(context, MainActivity.class);
+                        mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_TASK_ON_HOME | Intent.FLAG_ACTIVITY_CLEAR_TASK);   // FLAG_ACTIVITY_CLEAR_TASK - для того, чтоб MainActivity рестартовалась при каждой смс
+                        mIntent.putExtra("STR_TEL_NUMBER", msgs[i].getOriginatingAddress());
+                        mIntent.putExtra("STR_MESSAGE", msgs[i].getMessageBody());
+                        context.startActivity(mIntent);
+                    }
                 }
         }
 

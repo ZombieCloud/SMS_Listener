@@ -84,8 +84,8 @@ public class GetLocation {
     private Boolean mRequestingLocationUpdates;
 
 
-    public String Latitude = "";
-    public String Longitude = "";
+    public String latitude = "";
+    public String longitude = "";
     public String mLastUpdateTime = "";
 
 
@@ -181,18 +181,21 @@ public class GetLocation {
 
         if (mCurrentLocation != null) {
 
-            Latitude = String.format("%f", mCurrentLocation.getLatitude());
-            Longitude = String.format("%f", mCurrentLocation.getLongitude());
+            latitude = String.format("%f", mCurrentLocation.getLatitude());
+            longitude = String.format("%f", mCurrentLocation.getLongitude());
+            latitude = latitude.replace(",",".");
+            longitude = longitude.replace(",",".");
 
             // Только один раз получаем данные. Без этого - постоянное обновление
             stopLocationUpdates();
 
-            Toast.makeText(mainActivity, "Latitude = " + Latitude + "     " + "Longitude = " + Longitude + "    " + "Tel = " + telNumber, Toast.LENGTH_LONG).show();
+            Toast.makeText(mainActivity, "Latitude = " + latitude + "     " + "Longitude = " + longitude + "    " + "Tel = " + telNumber, Toast.LENGTH_LONG).show();
 
             //  Отсылаем смс
+            String msgLocation = "http://maps.google.com/?q=" + latitude + "," + longitude;
             if (telNumber != null) {
                 SmsManager sms = SmsManager.getDefault();
-                sms.sendTextMessage(telNumber, null, "ку-ку", PendingIntent.getBroadcast(
+                sms.sendTextMessage(telNumber, null, msgLocation, PendingIntent.getBroadcast(
                         this.mainActivity, 0, new Intent(SMS_SENT_ACTION), 0), PendingIntent.getBroadcast(this.mainActivity, 0, new Intent(SMS_DELIVERED_ACTION), 0));
             }
 
